@@ -3,26 +3,20 @@
     <div class="chat-header">
       <h1>PineChat</h1>
     </div>
-    <div v-if="isTyping" class="typing-indicator">
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="dot"></span>
-    </div>
     <div class="chat-window">
-      <!-- Main chat area -->
       <div class="chat-messages" ref="chatMessages">
         <div class="spacer"></div>
         <div v-for="(message, index) in messages.slice().reverse()" :key="index" :class="message.type" class="message">
           <div class="message-bubble">{{ message.text }}</div>
+          <TypingLoader v-if="isTyping && index === 0" />
         </div>
       </div>
       <button class="scroll-down" @click="scrollToBottom">↓</button>
     </div>
     <div class="chat-input">
-      <!-- <input type="text" v-model="inputText" @keyup.enter="submitMessage" @input="resizeInput" @keydown="handleKeyDown" /> -->
       <textarea v-model="inputText" @keydown.enter.exact.prevent="submitMessage"
         @keydown.shift.enter.exact="handleKeyDown" @input="resizeInput" :style="{ resize: 'none', overflow: 'hidden' }"
-        class="chat-input-field"></textarea>
+        class="chat-input-field" placeholder="Send a message."></textarea>
       <button @click="submitMessage">Send</button>
       <UploadButton />
     </div>
@@ -36,12 +30,14 @@
 import axios from 'axios';
 import DbResults from './DbResults.vue';
 import UploadButton from './UploadButton.vue';
+import TypingLoader from './common/TypingLoader.vue';
 
 export default {
   name: 'ChatWindow',
   components: {
     DbResults,
     UploadButton,
+    TypingLoader,
   },
   data() {
     return {
@@ -89,27 +85,27 @@ export default {
     },
     //Below methods are for auto-sizing the input text field
     handleKeyDown(event) {
+      //Allows shift+enter newlines and keeps cursor in focus
       if (event.key === "Enter" && event.shiftKey) {
         event.preventDefault();
-        this.inputText += "\n";
+        const textarea = event.target;
+        const cursorPosition = textarea.selectionStart;
+        textarea.setRangeText("\n", cursorPosition, cursorPosition, "end");
+        textarea.setSelectionRange(cursorPosition + 1, cursorPosition + 1);
+        this.inputText = textarea.value;
+        this.resizeInput(event);
       }
     },
     resizeInput(event) {
       const target = event.target;
       target.style.height = "auto";
-      const maxHeight = 100; // Set the maximum height in pixels
+      const maxHeight = 100;
+      const minHeight = 35;
 
-      if (target.scrollHeight <= maxHeight) {
-        target.style.height = `${target.scrollHeight}px`;
-      } else {
-        target.style.height = `${maxHeight}px`;
-        target.style.overflowY = "scroll";
-      }
-      if (target.value === "") {
-        target.style.height = "auto";
-      }
+      let newHeight = (target.scrollHeight <= 51) ? minHeight : Math.min(target.scrollHeight, maxHeight);
+      target.style.height = `${newHeight}px`;
+      target.style.overflowY = newHeight === maxHeight ? "scroll" : "hidden";
     }
-
   }
 };
 </script>
@@ -163,23 +159,6 @@ export default {
   color: #284b5a;
 }
 
-.typing-indicator {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 5px;
-  margin-top: 5px;
-}
-
-.dot {
-  background-color: #8e9775;
-  border-radius: 50%;
-  width: 8px;
-  height: 8px;
-  margin: 0 2px;
-  opacity: 0;
-  animation: typingIndicator 1.2s infinite;
-}
-
 .message-bubble {
   display: inline-block;
   padding: 10px 15px;
@@ -226,7 +205,14 @@ export default {
   border-radius: 4px;
   resize: none;
   overflow: hidden;
-  min-height: 20px;
+  height: 35px;
+  font-size: larger;
+}
+
+.chat-input .chat-input-field:focus {
+  outline: none;
+  border: 1px solid #8e9775;
+  box-shadow: 0 0 5px rgba(142, 151, 117, 0.5);
 }
 
 .chat-input button {
