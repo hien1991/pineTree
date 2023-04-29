@@ -5,7 +5,7 @@ from langchain.schema import (AIMessage, HumanMessage)
 from langchain.prompts.chat import (
     ChatPromptTemplate, MessagesPlaceholder, SystemMessagePromptTemplate, HumanMessagePromptTemplate,
 )
-from .utils import truncate_chat_history, count_tokens
+from .utils import *
 
 
 template = "You are a personal assistant AI. Your purpose is to help me by answering questions, providing recommendations, chatting, \
@@ -36,10 +36,8 @@ def initializeChat(openai_api_key):
 
 def chat(input_text, short_term_memories, longterm_memories):
 
-    # Calculate total tokens in long-term memories, then available tokens for short term memories
-    long_term_memories_text = " ".join([f"Source: ({item.get('source', '')}), date: {item.get('timestamp', '')}, context: {item.get('context', '')}" for item in longterm_memories])
-    long_term_memories_tokens = count_tokens(long_term_memories_text)
-    available_tokens = max_tokens - long_term_memories_tokens
+    # Count tokens in long-term memories in order to calculate # tokens we have left for short-term memories
+    available_tokens = max_tokens - calculate_long_term_memory_tokens(longterm_memories)
 
     # Add long-term memories to the conversation
     memory.chat_memory.clear()
@@ -53,27 +51,22 @@ def chat(input_text, short_term_memories, longterm_memories):
 
     # Add short-term memories (chat history) after long term memories (db retrievals)
     # Truncating will cut off chat history where needed to make it fit 4000 token limit
-    truncated_chat_history = truncate_chat_history(short_term_memories, available_tokens * 3)
-    short_term_memories = [] # Re-build short term memories to copy truncated ones
-    for msg in truncated_chat_history.split(" | "):
-        if ": " in msg:
-            prefix, content = msg.split(": ", 1)
-            message_class = HumanMessage if prefix == "User" else AIMessage
-            new_message = message_class(content=content)
-            memory.chat_memory.messages.append(new_message)
-            short_term_memories.append(new_message)
-
+    short_term_memories = truncate_chat_history(short_term_memories, available_tokens * 3)
+    for msg in short_term_memories:
+        if isinstance(msg, HumanMessage):
+            memory.chat_memory.add_user_message(msg.content)
+        elif isinstance(msg, AIMessage):
+            memory.chat_memory.add_ai_message(msg.content)
 
     memory.chat_memory.add_user_message(input_text)
-    response = conversation.predict(input=input_text)
+    response = conversation.predict(input=input_text) # AI response
 
     # Update short-term memories with the new response
     short_term_memories.append(HumanMessage(content=input_text))
     short_term_memories.append(AIMessage(content=response))
 
     # Calculate available tokens left after appending all memories and user input
-    tokens_used = count_tokens(truncated_chat_history) + count_tokens(input_text)
-    tokens_left = available_tokens - tokens_used
-    print("Tokens left after appending all memories and user input:", tokens_left)
+    available_tokens = max_tokens - calculate_total_memory_tokens(input_text, short_term_memories, longterm_memories)
+    print("Remaining tokens (saving 500 for output): ", available_tokens, " / ", max_tokens)
 
     return response, short_term_memories

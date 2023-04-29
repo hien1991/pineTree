@@ -5,10 +5,9 @@ from langchain.prompts.chat import (
     SystemMessagePromptTemplate,
     HumanMessagePromptTemplate,
 )
-from langchain.schema import HumanMessage
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationChain
-from .utils import truncate_chat_history
+from .utils import truncate_chat_history, stringify_history
 import json
 
 
@@ -33,7 +32,8 @@ def get_search_query(user_input, chat_history, openaiKey):
     memory = ConversationBufferMemory(return_messages=True)
     conversation = ConversationChain(memory=memory, prompt=prompt, llm=llm)
 
-    chat_history_string = truncate_chat_history(chat_history, 3000)
+    reduced_chat_history = truncate_chat_history(chat_history, 3000)
+    chat_history_string = stringify_history(reduced_chat_history)
     combined_input = chat_history_string + " | User Input: " + user_input
 
     # Example memories to help "train" the AI

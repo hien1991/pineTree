@@ -6,9 +6,30 @@ def count_tokens(text):
     tokens = encoding.encode(text)
     return len(tokens)
 
-# It's unlikely, but if the very first message in chat_history exceeds the entire token limit alone, 
-# the printed truncated_history will be empty since we don't allow it to go past the first message
-# One token is roughly equal to 3 chars (in English)
+
+def calculate_long_term_memory_tokens(longterm_memories):
+    long_term_memories_text = " ".join([f"Source: ({item.get('source', '')}), date: {item.get('timestamp', '')}, context: {item.get('context', '')}" for item in longterm_memories])
+    return count_tokens(long_term_memories_text)
+
+def calculate_total_memory_tokens(input_text, short_term_memories, longterm_memories):
+    long_term_memories_tokens = calculate_long_term_memory_tokens(longterm_memories)
+    short_term_memories_text = stringify_history(short_term_memories)
+
+    tokens_used = long_term_memories_tokens + count_tokens(short_term_memories_text) + count_tokens(input_text)
+    return tokens_used
+
+
+def stringify_history(messages):
+    formatted_messages = []
+    for msg in messages:
+        if isinstance(msg, HumanMessage):
+            prefix = "User"
+        else:
+            prefix = "AI"
+        content = f"{prefix}: {msg.content}"
+        formatted_messages.append(content)
+    return " | ".join(formatted_messages)
+
 def truncate_chat_history(chat_history, char_limit=3000):
     truncated_history = []
     current_length = 0
@@ -21,11 +42,11 @@ def truncate_chat_history(chat_history, char_limit=3000):
         content = f"{prefix}: {msg.content}"
         
         if current_length + len(content) + 3 <= char_limit:
-            truncated_history.insert(0, content)
+            truncated_history.insert(0, msg)
             current_length += len(content) + 3
         else:
             print("Token limit reached. Current history: ", truncated_history)
             break
 
-    return " | ".join(truncated_history)
+    return truncated_history
 
