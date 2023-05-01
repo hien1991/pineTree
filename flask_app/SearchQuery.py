@@ -76,9 +76,15 @@ def get_search_query(user_input, chat_history, openaiKey):
 
     try:
         response = conversation.predict(input=combined_input)
-        search_phrase = json.loads(response)
-        print("Returned search phrase: ", search_phrase["search_phrase"])
-        return search_phrase["search_phrase"]
+        search_phrase_dict = json.loads(response)
+        search_phrase = search_phrase_dict["search_phrase"]
+
+        # Search could be better if we append the original user's prompt, but we'll only do it if short
+        if len(search_phrase) + len(user_input) < 500:
+            search_phrase = search_phrase + ", " + user_input
+
+        print("Returned search phrase: ", search_phrase)
+        return search_phrase
     except (json.JSONDecodeError, KeyError):
         print("Error: AI response is not in the expected format. Response: ", response)
         return user_input

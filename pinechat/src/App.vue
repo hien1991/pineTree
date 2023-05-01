@@ -52,12 +52,14 @@ export default {
       const openaiApiKey = localStorage.getItem("openaiApiKey");
       const pineconeApiKey = localStorage.getItem("pineconeApiKey");
       const pineconeEnvKey = localStorage.getItem("pineconeEnvKey");
+      const useGpt4Key = (localStorage.getItem("useGpt4Key") === "true");
 
       if (openaiApiKey && pineconeApiKey && pineconeEnvKey) {
         axios.post(`${this.$apiUrl}/initialize`, {
           openaiApiKey,
           pineconeApiKey,
           pineconeEnvKey,
+          useGpt4Key,
         });
       }
     },

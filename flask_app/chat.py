@@ -27,10 +27,13 @@ memory = ConversationBufferMemory(return_messages=True)
 conversation = None
 max_tokens = 3500 # 4000 tokens available, you wanna save at least 500 for output
 
-# Frontend sends stored key values via API call in __init__.py by calling this
-def initializeChat(openai_api_key):
+
+# Called upon load-up & when settings are saved. Frontend sends key values -> __init__.py -> here
+def initializeChat(openai_api_key, useGpt4):
     global llm, conversation
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.5, openai_api_key=openai_api_key)
+    model_name = 'gpt-4' if useGpt4 else 'gpt-3.5-turbo'
+    print("using model: ", model_name)
+    llm = ChatOpenAI(model_name=model_name, temperature=0.5, openai_api_key=openai_api_key)
     conversation = ConversationChain(llm=llm, prompt=prompt, memory=memory)
 
 

@@ -11,6 +11,7 @@ openai_api_key_global = None
 short_term_memories_global = [] # chat history between user & AI
 pinecone_api_key_global = None
 pinecone_environment_global = None
+useGpt4_global = None
 ALLOWED_EXTENSIONS = {'pdf', 'txt', 'docx', 'ppt', 'pptx', 'md', 
                       'html', 'csv', 'jpg', 'jpeg', 'png', 'gif'}
 CORS(app)  # Allows Cross-Origin Resource Sharing to prevent console error
@@ -74,13 +75,14 @@ def upload_file():
 
 @app.route('/initialize', methods=['POST'])
 def initialize_flask():
-    global openai_api_key_global, pinecone_api_key_global, pinecone_environment_global
+    global openai_api_key_global, pinecone_api_key_global, pinecone_environment_global, useGpt4_global
     data = request.json
     openai_api_key_global = data['openaiApiKey']
     pinecone_api_key_global = data['pineconeApiKey']
     pinecone_environment_global = data['pineconeEnvKey']
+    useGpt4_global = data['useGpt4Key']
     Database.initialize(pinecone_api_key_global, pinecone_environment_global)
-    initializeChat(openai_api_key_global)
+    initializeChat(openai_api_key_global, useGpt4_global)
     return {"status": "success"}
 
 

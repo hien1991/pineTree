@@ -4,6 +4,7 @@ const initialState = {
   pineconeApiKey: localStorage.getItem('pineconeApiKey') || '',
   pineconeEnvKey: localStorage.getItem('pineconeEnvKey') || '',
   openaiApiKey: localStorage.getItem('openaiApiKey') || '',
+  useGpt4Key: localStorage.getItem('useGpt4Key') === 'true' || false,
 };
 
 export default createStore({
@@ -17,6 +18,9 @@ export default createStore({
     },
     setPineconeEnvKey(state, key){
       state.pineconeEnvKey = key;
+    },
+    setUseGpt4Key(state, key){
+      state.useGpt4Key = key;
     }
   },
   actions: {
@@ -32,6 +36,10 @@ export default createStore({
       commit('setPineconeEnvKey', key);
       localStorage.setItem('pineconeEnvKey', key);
     },
+    updateUseGpt4Key({ commit }, key) {
+      commit('setUseGpt4Key', key);
+      localStorage.setItem('useGpt4Key', key.toString());
+    }
   },
   getters: {
     getPineconeApiKey(state) {
@@ -42,6 +50,9 @@ export default createStore({
     },
     getPineconeEnvKey(state) {
       return state.pineconeEnvKey;
+    },
+    getUseGpt4Key(state) {
+      return state.useGpt4Key;
     }
   },
 });
