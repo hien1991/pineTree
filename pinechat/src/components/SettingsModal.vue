@@ -8,11 +8,15 @@
       <input type="text" id="pinecone-api-key" v-model="pineconeApiKey" />
       <label for="pinecone-api-key">Pinecone env:</label>
       <input type="text" id="pinecone-env-key" v-model="pineconeEnvKey" />
-      <label for="model-selection">Use GPT-4:</label>
-      <input type="checkbox" id="model-selection" :checked="useGpt4Key" @input="onUseGpt4KeyChange"
-        ref="modelSelection" />
+      <label class="model-toggle-container">GPT-4:
+        <div class="switch">
+          <input type="checkbox" id="model-selection" :checked="useGpt4Key" @input="onUseGpt4KeyChange"
+            ref="modelSelection" />
+          <span class="slider round"></span>
+        </div>
+      </label>
       <button @click="saveKeys" :disabled="submitDisabled" class="save-button">Save</button>
-      <button @click="$emit('close')">Close</button>
+      <button @click="$emit('close')" class="close-button">Close</button>
       <p :class="displayMessageClass">{{ displayMessage }}</p>
     </div>
   </div>
@@ -143,80 +147,80 @@ export default {
   height: 100%;
   overflow: auto;
   background-color: rgba(0, 0, 0, 0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .settings-modal-content {
   background-color: #fefefe;
+  margin: 15% auto;
   padding: 20px;
   border: 1px solid #888;
-  width: 400px;
-  max-width: 90%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border-radius: 4px;
+  width: 80%;
+  max-width: 400px;
 }
 
 .settings-modal-content h2 {
   margin-top: 0;
-  margin-bottom: 20px;
-  text-align: center;
-  font-size: 24px;
-  font-weight: 600;
 }
 
-.settings-modal-content label {
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.settings-modal-content input[type="text"] {
+.settings-modal-content label,
+.settings-modal-content input {
   display: block;
-  width: 100%;
-  padding: 8px 12px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  margin-bottom: 15px;
-  box-sizing: border-box;
-}
-
-.settings-modal-content .checkbox-container {
-  display: flex;
-  align-items: center;
   margin-bottom: 10px;
+  width: 90%;
 }
 
-.settings-modal-content input[type="checkbox"] {
-  margin: 0;
-  width: 20px;
-  height: 20px;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  background-color: #fff;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  outline: none;
-  cursor: pointer;
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch {
   position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 28px;
+  margin-bottom: -1.5%;
 }
 
-.settings-modal-content input[type="checkbox"]:checked {
-  background-color: #3a3a3a;
-}
-
-.settings-modal-content input[type="checkbox"]:checked::after {
-  content: "";
-  display: block;
+.slider {
   position: absolute;
-  width: 6px;
-  height: 12px;
-  border: solid #fff;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg) translateX(4px) translateY(1px);
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 1px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+.switch input:checked+.slider {
+  background-color: #2196F3;
+}
+
+.switch input:focus+.slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+.switch input:checked+.slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
 }
 
 .settings-modal-content button {
@@ -224,16 +228,10 @@ export default {
   color: white;
   border: none;
   font-size: 16px;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 5px 10px;
   margin-top: 10px;
   margin-right: 10px;
   cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.settings-modal-content button:hover {
-  background-color: #4a4a4a;
 }
 
 .success-message {
@@ -255,20 +253,13 @@ export default {
   color: white;
   border: none;
   font-size: 16px;
-  padding: 8px 12px;
-  border-radius: 4px;
+  padding: 5px 10px;
   margin-top: 10px;
   margin-right: 10px;
   cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.save-button:hover:not(:disabled) {
-  background-color: #4a4a4a;
 }
 
 .save-button:disabled {
   background-color: #ccc;
   cursor: not-allowed;
-}
-</style>
+}</style>
