@@ -27,12 +27,12 @@ class Database:
         Database.is_initialized = True
 
     @staticmethod
-    def create_memory_entry(categories, summary):
+    def create_memory_entry(categories, summary, source='user input'):
         memory_id = f"memory_{str(uuid4())}"
         metadata = {
             "timestamp": datetime.now().isoformat(),
             "categories": categories,
-            "source": "user input",
+            "source": source,
             "text": summary
         }
         return {memory_id: {"text": summary, "metadata": metadata}}

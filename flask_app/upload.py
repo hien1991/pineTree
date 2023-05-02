@@ -45,7 +45,7 @@ def get_loader_by_extension(extension):
         return UnstructuredMarkdownLoader
     elif extension == ".csv":
         return CSVLoader
-    elif extension in [".jpg", ".jpeg", ".png", ".gif"]:
+    elif extension in {".jpg", ".jpeg", ".png", ".gif"}:
         return UnstructuredImageLoader
     else:
         raise ValueError(f"Unsupported file type: {extension}")
@@ -65,10 +65,7 @@ def process_uploaded_file(file: FileStorage, database: Database):
     for document in documents:
         texts = text_splitter.split_text(document.page_content)
         chunks.extend([{
-            'id': str(uuid4()),
-            'timestamp': datetime.now().isoformat(),
             'text': texts[i],
-            "source": "uploaded",
             'chunk': i,
             'filename': file.filename
         } for i in range(len(texts))])
@@ -80,7 +77,7 @@ def process_uploaded_file(file: FileStorage, database: Database):
 
         data = {}
         for chunk in meta_batch:
-            memory_entry = database.create_memory_entry([], chunk['text'])
+            memory_entry = database.create_memory_entry([], chunk['text'], source="uploaded")
             data.update(memory_entry)
 
         database.update_db(data)

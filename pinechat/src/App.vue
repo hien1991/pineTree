@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <nav class="top-nav">
+      <button @click="togglePineDocs">PineDocs</button>
       <button @click="toggleDbResults">Show Datababase Returns</button>
       <button @click="showSettings">Settings</button>
     </nav>
@@ -16,12 +17,14 @@
     </div>
   </div>
   <error-modal :visible="!!errorMessage" :message="errorMessage" @dismiss="dismissError"></error-modal>
+  <PineDocs v-if="pineDocsVisible" />
 </template>
 
 <script>
 import SettingsModal from "./components/SettingsModal.vue";
 import ChatWindow from './components/ChatWindow.vue';
 import SideChatBar from './components/SideChatBar.vue';
+import PineDocs from './components/PineDocs.vue';
 import ErrorModal from "./components/common/ErrorModal.vue";
 import axios from 'axios';
 
@@ -30,6 +33,7 @@ export default {
   components: {
     ChatWindow,
     SideChatBar,
+    PineDocs,
     SettingsModal,
     ErrorModal,
   },
@@ -38,6 +42,7 @@ export default {
       settingsVisible: false,
       showGuideModal: false,
       dbResultsVisible: false,
+      pineDocsVisible: false,
       errorMessage: "",
     };
   },
@@ -47,6 +52,9 @@ export default {
     },
     toggleDbResults() {
       this.dbResultsVisible = !this.dbResultsVisible;
+    },
+    togglePineDocs() {
+      this.pineDocsVisible = !this.pineDocsVisible;
     },
     hideGuideModalAndShowSettings() {
       this.showGuideModal = false;
