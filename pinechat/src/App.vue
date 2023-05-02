@@ -1,39 +1,32 @@
 <template>
   <div id="app">
     <nav class="top-nav">
-      <button @click="togglePineDocs">PineDocs</button>
+      <router-link to="/">Home</router-link>
+      <router-link to="/pinedocs">PineDocs</router-link>
       <button @click="toggleDbResults">Show Datababase Returns</button>
       <button @click="showSettings">Settings</button>
     </nav>
-    <SideChatBar />
-    <ChatWindow :dbResultsVisible="dbResultsVisible" />
-    <SettingsModal v-if="settingsVisible" @close="showSettings" @api-keys-updated="initializeBackend" />
-  </div>
-  <div v-if="showGuideModal" class="guide-modal">
-    <div class="guide-modal-content">
-      <h2>Welcome to PineChat!</h2>
-      <p>Before you can start using the app, please enter the required API keys in the settings.</p>
-      <button @click="hideGuideModalAndShowSettings">Go to Settings</button>
+    <router-view :dbResultsVisible="dbResultsVisible" />
+    <div v-if="showGuideModal" class="guide-modal">
+      <div class="guide-modal-content">
+        <h2>Welcome to PineChat!</h2>
+        <p>Before you can start using the app, please enter the required API keys in the settings.</p>
+        <button @click="hideGuideModalAndShowSettings">Go to Settings</button>
+      </div>
     </div>
+    <SettingsModal v-if="settingsVisible" @close="showSettings" @api-keys-updated="initializeBackend" />
+    <error-modal :visible="!!errorMessage" :message="errorMessage" @dismiss="dismissError"></error-modal>
   </div>
-  <error-modal :visible="!!errorMessage" :message="errorMessage" @dismiss="dismissError"></error-modal>
-  <PineDocs v-if="pineDocsVisible" />
 </template>
 
 <script>
 import SettingsModal from "./components/SettingsModal.vue";
-import ChatWindow from './components/ChatWindow.vue';
-import SideChatBar from './components/SideChatBar.vue';
-import PineDocs from './components/PineDocs.vue';
 import ErrorModal from "./components/common/ErrorModal.vue";
 import axios from 'axios';
 
 export default {
   name: "App",
   components: {
-    ChatWindow,
-    SideChatBar,
-    PineDocs,
     SettingsModal,
     ErrorModal,
   },
@@ -42,7 +35,6 @@ export default {
       settingsVisible: false,
       showGuideModal: false,
       dbResultsVisible: false,
-      pineDocsVisible: false,
       errorMessage: "",
     };
   },
@@ -52,9 +44,6 @@ export default {
     },
     toggleDbResults() {
       this.dbResultsVisible = !this.dbResultsVisible;
-    },
-    togglePineDocs() {
-      this.pineDocsVisible = !this.pineDocsVisible;
     },
     hideGuideModalAndShowSettings() {
       this.showGuideModal = false;
@@ -132,6 +121,20 @@ body {
   border-radius: 4px;
   padding: 5px 10px;
   transition: background-color 0.3s;
+}
+
+.top-nav a {
+  color: white;
+  text-decoration: none;
+  font-size: 16px;
+  margin-right: 10px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s;
+}
+
+.top-nav a:hover {
+  background-color: #6b8e23;
 }
 
 .top-nav button:hover {

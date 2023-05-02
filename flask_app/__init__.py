@@ -92,7 +92,7 @@ def initialize_flask():
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def index(path):
+def catch_all(path):
     return send_from_directory('flask_app/static', 'index.html')
 
 if __name__ == '__main__':
