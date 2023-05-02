@@ -6,7 +6,7 @@
     <div class="chat-window">
       <div class="chat-messages" ref="chatMessages">
         <div class="spacer"></div>
-        <div v-for="(message, index) in messages.slice().reverse()" :key="index" :class="message.type" class="message">
+        <div v-for="(message, index) in messages.slice().reverse()" :key="index" class="message" :class="message.type">
           <div class="message-bubble">{{ message.text }}</div>
           <TypingLoader v-if="isTyping && index === 0" />
         </div>
@@ -65,17 +65,21 @@ export default {
       if (!this.inputText.trim()) return;
       this.messages.push({ type: 'user', text: this.inputText });
       this.isTyping = true;
+
       try {
-        axios.post(`${this.$apiUrl}/chat`, { input_text: this.inputText }).then((response) => {
-          console.log(response.data);
+        const response = await axios.post(`${this.$apiUrl}/chat`, { input_text: this.inputText });
+
+        if (response.data.status === 'error') {
+          this.messages.push({ type: 'error', text: response.data.message });
+        } else {
           const aiResponse = response.data.response;
           this.searchResults = response.data.search_results; //Received by DatabaseResults.vue
           this.searchQueryDisplay = response.data.db_query;
 
-          const chatResponse = aiResponse
+          const chatResponse = aiResponse;
           this.messages.push({ type: 'bot', text: chatResponse });
-          this.isTyping = false;
-        });
+        }
+        this.isTyping = false;
       } catch (error) {
         console.error('Error while communicating with chatbot:', error);
         this.messages.push({ type: 'error', text: 'Error while communicating with chatbot' });
@@ -178,6 +182,18 @@ export default {
 .bot .message-bubble {
   background-color: #8e9775;
   color: #e6e6e6;
+}
+
+.error {
+  font-size: 1.1rem;
+  color: #d9534f;
+  text-align: left;
+}
+
+.error .message-bubble {
+  background-color: #f9d9d7;
+  color: #d9534f;
+  border: 1px solid #d8a6a4;
 }
 
 .chat-input {

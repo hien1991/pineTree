@@ -41,19 +41,20 @@ def chat_route():
     global openai_api_key_global, short_term_memories_global, pinecone_api_key_global
     input_text = request.json.get('input_text', '')
 
-    if not input_text:
-        return jsonify({"error": "No input text provided"}), 400
-    if not openai_api_key_global:
-        return jsonify({"error": "OpenAI API key not provided"}), 400
+    if not Database.is_initialized:
+        return jsonify({"status": "error", "message": "The chat is not ready yet. Please wait for the initialization to complete."})
 
-    search_query = get_search_query(input_text, short_term_memories_global, openai_api_key_global)
-    longterm_memories = Database.get_relevant_memories(search_query)
-    saveUserInput(input_text) # Save relevant info from user into db
+    try:
+        search_query = get_search_query(input_text, short_term_memories_global, openai_api_key_global)
+        longterm_memories = Database.get_relevant_memories(search_query)
+        saveUserInput(input_text)  # Save relevant info from user into db
+        response, short_term_memories_global = chat(input_text, short_term_memories_global, longterm_memories)
 
-    response, short_term_memories_global = chat(input_text, short_term_memories_global, longterm_memories)
-    formatted_search_results = [format_search_result(item, index) for index, item in enumerate(longterm_memories)]
-    #print("search results: ", formatted_search_results)
-    return jsonify({"response": response, "search_results": formatted_search_results, "db_query": search_query})
+        formatted_search_results = [format_search_result(item, index) for index, item in enumerate(longterm_memories)]
+        #print("search results: ", formatted_search_results)
+        return jsonify({"response": response, "search_results": formatted_search_results, "db_query": search_query})
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Error: " + str(e)})
 
 
 @app.route('/upload', methods=['POST'])
@@ -81,9 +82,12 @@ def initialize_flask():
     pinecone_api_key_global = data['pineconeApiKey']
     pinecone_environment_global = data['pineconeEnvKey']
     useGpt4_global = data['useGpt4Key']
-    Database.initialize(pinecone_api_key_global, pinecone_environment_global)
-    initializeChat(openai_api_key_global, useGpt4_global)
-    return {"status": "success"}
+    try:
+        Database.initialize(pinecone_api_key_global, pinecone_environment_global)
+        initializeChat(openai_api_key_global, useGpt4_global)
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}, 500
 
 
 @app.route('/', defaults={'path': ''})

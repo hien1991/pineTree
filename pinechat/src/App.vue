@@ -15,12 +15,14 @@
       <button @click="hideGuideModalAndShowSettings">Go to Settings</button>
     </div>
   </div>
+  <error-modal :visible="!!errorMessage" :message="errorMessage" @dismiss="dismissError"></error-modal>
 </template>
 
 <script>
 import SettingsModal from "./components/SettingsModal.vue";
 import ChatWindow from './components/ChatWindow.vue';
 import SideChatBar from './components/SideChatBar.vue';
+import ErrorModal from "./components/common/ErrorModal.vue";
 import axios from 'axios';
 
 export default {
@@ -29,12 +31,14 @@ export default {
     ChatWindow,
     SideChatBar,
     SettingsModal,
+    ErrorModal,
   },
   data() {
     return {
       settingsVisible: false,
       showGuideModal: false,
       dbResultsVisible: false,
+      errorMessage: "",
     };
   },
   methods: {
@@ -48,19 +52,34 @@ export default {
       this.showGuideModal = false;
       this.showSettings();
     },
-    initializeBackend() {
+    dismissError() {
+      this.errorMessage = "";
+    },
+    async initializeBackend() {
       const openaiApiKey = localStorage.getItem("openaiApiKey");
       const pineconeApiKey = localStorage.getItem("pineconeApiKey");
       const pineconeEnvKey = localStorage.getItem("pineconeEnvKey");
       const useGpt4Key = (localStorage.getItem("useGpt4Key") === "true");
 
       if (openaiApiKey && pineconeApiKey && pineconeEnvKey) {
-        axios.post(`${this.$apiUrl}/initialize`, {
-          openaiApiKey,
-          pineconeApiKey,
-          pineconeEnvKey,
-          useGpt4Key,
-        });
+        try {
+          const response = await axios.post(`${this.$apiUrl}/initialize`, {
+            openaiApiKey,
+            pineconeApiKey,
+            pineconeEnvKey,
+            useGpt4Key,
+          });
+          if (response.data.status === "error") {
+            this.$emit("error", response.data.message);
+          }
+        } catch (error) {
+          const serverErrorMessage = error.response && error.response.data && error.response.data.message;
+          if (serverErrorMessage) {
+            this.errorMessage = `An error occurred while initializing the backend: ${serverErrorMessage}`;
+          } else {
+            this.errorMessage = "An error occurred while initializing the backend: " + error;
+          }
+        }
       }
     },
   },

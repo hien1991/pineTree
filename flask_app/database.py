@@ -6,10 +6,13 @@ from tqdm.auto import tqdm
 
 openai.api_key = ""
 MODEL = "text-embedding-ada-002"
-index_name = 'openai'
+index_name = 'pinechat'
 index = None
 
 class Database:
+
+    is_initialized = False
+
     @staticmethod
     def initialize(pinecone_api_key, pinecone_environment):
         global index
@@ -17,9 +20,11 @@ class Database:
 
         # Check if the index already exists, and if not, create it
         if index_name not in pinecone.list_indexes():
+            print("creating index: ", index_name)
             pinecone.create_index(index_name, dimension=1536, metric='dotproduct')
 
         index = pinecone.Index(index_name)  # Connect to the Pinecone index
+        Database.is_initialized = True
 
     @staticmethod
     def create_memory_entry(categories, summary):
