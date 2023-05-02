@@ -6,7 +6,7 @@
     <div class="chat-window">
       <div class="chat-messages" ref="chatMessages">
         <div class="spacer"></div>
-        <div v-for="(message, index) in messages.slice().reverse()" :key="index" class="message" :class="message.type">
+        <div v-for="(message, index) in getChatMessages.slice().reverse()" :key="index" class="message" :class="message.type">
           <div class="message-bubble">{{ message.text }}</div>
           <TypingLoader v-if="isTyping && index === 0" />
         </div>
@@ -31,6 +31,7 @@ import axios from 'axios';
 import DbResults from './DbResults.vue';
 import UploadButton from './UploadButton.vue';
 import TypingLoader from './common/TypingLoader.vue';
+import { mapActions, mapGetters } from 'vuex';
 
 export default {
   name: 'ChatWindow',
@@ -42,7 +43,6 @@ export default {
   data() {
     return {
       inputText: "",
-      messages: [],
       isTyping: false,
       searchResults: [],
       searchQueryDisplay: ''
@@ -54,7 +54,11 @@ export default {
       default: false,
     },
   },
+  computed: {
+    ...mapGetters(['getChatMessages']),
+  },
   methods: {
+    ...mapActions(['addChatMessage']),
     scrollToBottom() {
       this.$nextTick(() => {
         let scrollHeight = this.$refs.chatMessages.scrollHeight
@@ -63,26 +67,26 @@ export default {
     },
     async submitMessage() {
       if (!this.inputText.trim()) return;
-      this.messages.push({ type: 'user', text: this.inputText });
+      this.addChatMessage({ type: 'user', text: this.inputText });
       this.isTyping = true;
 
       try {
         const response = await axios.post(`${this.$apiUrl}/chat`, { input_text: this.inputText });
 
         if (response.data.status === 'error') {
-          this.messages.push({ type: 'error', text: response.data.message });
+          this.addChatMessage({ type: 'error', text: response.data.message });
         } else {
           const aiResponse = response.data.response;
           this.searchResults = response.data.search_results; //Received by DatabaseResults.vue
           this.searchQueryDisplay = response.data.db_query;
 
           const chatResponse = aiResponse;
-          this.messages.push({ type: 'bot', text: chatResponse });
+          this.addChatMessage({ type: 'bot', text: chatResponse });
         }
         this.isTyping = false;
       } catch (error) {
         console.error('Error while communicating with chatbot:', error);
-        this.messages.push({ type: 'error', text: 'Error while communicating with chatbot' });
+        this.addChatMessage({ type: 'error', text: 'Error while communicating with chatbot' });
         this.isTyping = false;
       }
       this.inputText = '';

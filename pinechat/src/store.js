@@ -5,6 +5,7 @@ const initialState = {
   pineconeEnvKey: localStorage.getItem('pineconeEnvKey') || '',
   openaiApiKey: localStorage.getItem('openaiApiKey') || '',
   useGpt4Key: localStorage.getItem('useGpt4Key') === 'true' || false,
+  chatMessages: [],
 };
 
 export default createStore({
@@ -21,7 +22,10 @@ export default createStore({
     },
     setUseGpt4Key(state, key){
       state.useGpt4Key = key;
-    }
+    },
+    addChatMessage(state, message) {
+      state.chatMessages.push(message);
+    },
   },
   actions: {
     updatePineconeApiKey({ commit }, key) {
@@ -39,7 +43,10 @@ export default createStore({
     updateUseGpt4Key({ commit }, key) {
       commit('setUseGpt4Key', key);
       localStorage.setItem('useGpt4Key', key.toString());
-    }
+    },
+    addChatMessage({ commit }, message) {
+      commit('addChatMessage', message);
+    },
   },
   getters: {
     getPineconeApiKey(state) {
@@ -53,6 +60,9 @@ export default createStore({
     },
     getUseGpt4Key(state) {
       return state.useGpt4Key;
-    }
+    },
+    getChatMessages(state) {
+      return state.chatMessages;
+    },
   },
 });
