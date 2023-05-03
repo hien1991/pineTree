@@ -27,18 +27,45 @@ class Database:
         Database.is_initialized = True
 
     @staticmethod
-    def create_memory_entry(categories, summary, source='user input'):
+    def create_memory_entry(categories, summary, file_name='', source='user input'):
         memory_id = f"memory_{str(uuid4())}"
         metadata = {
             "timestamp": datetime.now().isoformat(),
+            "filename": file_name,
             "categories": categories,
             "source": source,
             "text": summary
         }
         return {memory_id: {"text": summary, "metadata": metadata}}
+    
+    # Used by PineDocs page to retrieve info on all user's uploads
+    @staticmethod
+    def insert_uploads_record(file_name, num_chunks):
+        pine_docs_namespace = 'hien91-pineDocs' # Will un-hardcode when usernames exist
+        metadata = {
+            "timestamp": datetime.now().isoformat(),
+            "filename": file_name,
+            "num_chunks": num_chunks,
+            "text": file_name
+        }
+
+        memory_id = f"file_{str(uuid4())}"
+        memory_entry = {memory_id: {"text": file_name, "metadata": metadata}}
+        Database.update_db(memory_entry, namespace=pine_docs_namespace)
+
+    # Testing function to see if insert_uploads_record() works
+    @staticmethod
+    def test_query_pine_docs_namespace():
+        pine_docs_namespace = 'hien91-pineDocs'
+        query_vector = [0] * 1536
+        results = index.query(query_vector, top_k=100, namespace=pine_docs_namespace, include_metadata=True)
+        print("Results from hien91-pineDocs namespace: ")
+        for item in results['matches']:
+            print(item['metadata'])
+
 
     @staticmethod
-    def update_db(data):
+    def update_db(data, namespace=None):
         data_items = list(data.items())
         batch_size = 32
         for i in tqdm(range(0, len(data_items), batch_size)):
@@ -51,7 +78,7 @@ class Database:
             embeds = [record["embedding"] for record in res["data"]]
 
             to_upsert = [{"id": memory_id, "values": embedding, "metadata": metadata} for memory_id, embedding, metadata in zip(ids_batch, embeds, [item[1]["metadata"] for item in data_items[i:i_end]])]
-            index.upsert(vectors=to_upsert)
+            index.upsert(vectors=to_upsert, namespace=namespace)
 
     @staticmethod
     def semantic_search(query, filter=None, top_k=5):

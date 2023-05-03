@@ -1,7 +1,5 @@
 import os
 import tempfile
-from datetime import datetime
-from uuid import uuid4
 from werkzeug.datastructures import FileStorage
 import tiktoken
 from langchain.document_loaders import (
@@ -12,8 +10,6 @@ from langchain.document_loaders import (
     UnstructuredHTMLLoader,
     UnstructuredMarkdownLoader,
     CSVLoader,
-    UnstructuredEPubLoader,
-    SRTLoader,
     UnstructuredImageLoader
 )
 from database import Database
@@ -70,6 +66,8 @@ def process_uploaded_file(file: FileStorage, database: Database):
             'filename': file.filename
         } for i in range(len(texts))])
 
+    database.insert_uploads_record(file.filename, len(chunks))
+    
     batch_size = 100
     for i in range(0, len(chunks), batch_size):
         i_end = min(len(chunks), i + batch_size)
@@ -77,7 +75,7 @@ def process_uploaded_file(file: FileStorage, database: Database):
 
         data = {}
         for chunk in meta_batch:
-            memory_entry = database.create_memory_entry([], chunk['text'], source="uploaded")
+            memory_entry = database.create_memory_entry([], chunk['text'], file.filename, source="uploaded")
             data.update(memory_entry)
 
         database.update_db(data)

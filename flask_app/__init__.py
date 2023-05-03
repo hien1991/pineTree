@@ -51,7 +51,7 @@ def chat_route():
         response, short_term_memories_global = chat(input_text, short_term_memories_global, longterm_memories)
 
         formatted_search_results = [format_search_result(item, index) for index, item in enumerate(longterm_memories)]
-        print("search results: ", formatted_search_results)
+        #print("search results: ", formatted_search_results)
         return jsonify({"response": response, "search_results": formatted_search_results, "db_query": search_query})
     except Exception as e:
         return jsonify({"status": "error", "message": "Error: " + str(e)})
@@ -69,6 +69,7 @@ def upload_file():
 
     if file and allowed_file(file.filename):
         result = process_uploaded_file(file, Database)
+        Database.test_query_pine_docs_namespace()
         return jsonify(result)
     else:
         return jsonify({"error": "Unsupported file type"}), 400
