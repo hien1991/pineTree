@@ -13,6 +13,7 @@ from langchain.document_loaders import (
     UnstructuredImageLoader
 )
 from database import Database
+from utils import get_file_size
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 
@@ -55,6 +56,7 @@ def process_uploaded_file(file: FileStorage, database: Database):
     loader_cls = get_loader_by_extension(extension)
     loader = loader_cls(temp_file.name)
     documents = loader.load()
+    file_size = get_file_size(temp_file.name)
     os.unlink(temp_file.name)  # Delete the temporary file
 
     chunks = []
@@ -66,7 +68,7 @@ def process_uploaded_file(file: FileStorage, database: Database):
             'filename': file.filename
         } for i in range(len(texts))])
 
-    database.insert_uploads_record(file.filename, len(chunks))
+    database.insert_uploads_record(file.filename, len(chunks), file_size)
     
     batch_size = 100
     for i in range(0, len(chunks), batch_size):

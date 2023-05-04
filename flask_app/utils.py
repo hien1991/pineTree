@@ -1,4 +1,6 @@
 from langchain.schema import HumanMessage
+from datetime import datetime
+import os
 import tiktoken
 
 def count_tokens(text):
@@ -18,6 +20,21 @@ def calculate_total_memory_tokens(input_text, short_term_memories, longterm_memo
     tokens_used = long_term_memories_tokens + count_tokens(short_term_memories_text) + count_tokens(input_text)
     return tokens_used
 
+# Pinecone auto-formats date into different date format if it sees traditional date-time
+def get_readable_date(dt: datetime) -> str:
+    return "time: " + dt.strftime("%Y-%m-%d %H:%M:%S")
+
+def get_readable_size(size: int, decimal_places: int = 2):
+    for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
+        if size < 1024.0:
+            break
+        size /= 1024.0
+    return f"{size:.{decimal_places}f} {unit}"
+
+def get_file_size(temp_file_name: str):
+    bytes_size = os.path.getsize(temp_file_name)
+    file_size = get_readable_size(bytes_size)
+    return file_size
 
 def stringify_history(messages):
     formatted_messages = []

@@ -3,6 +3,7 @@ import pinecone
 from uuid import uuid4
 from datetime import datetime
 from tqdm.auto import tqdm
+from utils import get_readable_date
 
 openai.api_key = ""
 MODEL = "text-embedding-ada-002"
@@ -30,7 +31,7 @@ class Database:
     def create_memory_entry(categories, summary, file_name='', source='user input'):
         memory_id = f"memory_{str(uuid4())}"
         metadata = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": get_readable_date(datetime.now()),
             "filename": file_name,
             "categories": categories,
             "source": source,
@@ -40,12 +41,13 @@ class Database:
     
     # Used by PineDocs page to retrieve info on all user's uploads
     @staticmethod
-    def insert_uploads_record(file_name, num_chunks):
+    def insert_uploads_record(file_name, num_chunks, file_size):
         pine_docs_namespace = 'hien91-pineDocs' # Will un-hardcode when usernames exist
         metadata = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": get_readable_date(datetime.now()),
             "filename": file_name,
             "num_chunks": num_chunks,
+            "file_size": file_size,
             "text": file_name
         }
 
