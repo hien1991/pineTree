@@ -3,16 +3,15 @@ import pinecone
 from uuid import uuid4
 from datetime import datetime
 from tqdm.auto import tqdm
-from utils import get_readable_date
 
 openai.api_key = ""
 MODEL = "text-embedding-ada-002"
 index_name = 'pinechat'
-index = None
 
 class Database:
 
     is_initialized = False
+    index = None
 
     @staticmethod
     def initialize(pinecone_api_key, pinecone_environment):
@@ -24,14 +23,14 @@ class Database:
             print("creating index: ", index_name)
             pinecone.create_index(index_name, dimension=1536, metric='dotproduct')
 
-        index = pinecone.Index(index_name)  # Connect to the Pinecone index
+        Database.index = pinecone.Index(index_name)
         Database.is_initialized = True
 
     @staticmethod
     def create_memory_entry(categories, summary, file_name='', source='user input'):
         memory_id = f"memory_{str(uuid4())}"
         metadata = {
-            "timestamp": get_readable_date(datetime.now()),
+            "timestamp": datetime.now(),
             "filename": file_name,
             "categories": categories,
             "source": source,
@@ -44,7 +43,7 @@ class Database:
     def insert_uploads_record(file_name, num_chunks, file_size):
         pine_docs_namespace = 'hien91-pineDocs' # Will un-hardcode when usernames exist
         metadata = {
-            "timestamp": get_readable_date(datetime.now()),
+            "timestamp": datetime.now(),
             "filename": file_name,
             "num_chunks": num_chunks,
             "file_size": file_size,
@@ -55,15 +54,17 @@ class Database:
         memory_entry = {memory_id: {"text": file_name, "metadata": metadata}}
         Database.update_db(memory_entry, namespace=pine_docs_namespace)
 
-    # Testing function to see if insert_uploads_record() works
+
     @staticmethod
-    def test_query_pine_docs_namespace():
-        pine_docs_namespace = 'hien91-pineDocs'
+    def get_all_uploaded_files(pine_docs_namespace=""):
         query_vector = [0] * 1536
-        results = index.query(query_vector, top_k=100, namespace=pine_docs_namespace, include_metadata=True)
-        print("Results from hien91-pineDocs namespace: ")
+        results = Database.index.query(query_vector, top_k=100, namespace=pine_docs_namespace, include_metadata=True)
+
+        uploaded_files = []
         for item in results['matches']:
-            print(item['metadata'])
+            uploaded_files.append(item['metadata'])
+        
+        return uploaded_files
 
 
     @staticmethod
@@ -80,13 +81,13 @@ class Database:
             embeds = [record["embedding"] for record in res["data"]]
 
             to_upsert = [{"id": memory_id, "values": embedding, "metadata": metadata} for memory_id, embedding, metadata in zip(ids_batch, embeds, [item[1]["metadata"] for item in data_items[i:i_end]])]
-            index.upsert(vectors=to_upsert, namespace=namespace)
+            Database.index.upsert(vectors=to_upsert, namespace=namespace)
 
     @staticmethod
     def semantic_search(query, filter=None, top_k=5):
         xq = openai.Embedding.create(input=query, engine=MODEL)['data'][0]['embedding']
         meta_filter = None if filter is None else {"source": {"$eq": filter}}
-        res = index.query(xq, top_k=top_k, filter=meta_filter, include_metadata=True)
+        res = Database.index.query(xq, top_k=top_k, filter=meta_filter, include_metadata=True)
         results = []
 
         for item in res['matches']:
@@ -105,4 +106,3 @@ class Database:
         uploaded_memories = Database.semantic_search(search_query, filter="uploaded", top_k=5)
         longterm_memories = user_input_memories + uploaded_memories
         return longterm_memories
-

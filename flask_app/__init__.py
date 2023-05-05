@@ -5,6 +5,8 @@ from .database import Database
 from .SaveMemories import get_categories_and_summary
 from .upload import process_uploaded_file
 from .SearchQuery import get_search_query
+from .database import Database
+
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 openai_api_key_global = None
@@ -69,11 +71,18 @@ def upload_file():
 
     if file and allowed_file(file.filename):
         result = process_uploaded_file(file, Database)
-        Database.test_query_pine_docs_namespace()
         return jsonify(result)
     else:
         return jsonify({"error": "Unsupported file type"}), 400
     
+
+@app.route('/get_all_uploads', methods=['GET'])
+def get_all_uploads():
+    # hardcoded until we introduce userId + users feature
+    pine_docs_namespace = 'hien91-pineDocs'
+    uploaded_files = Database.get_all_uploaded_files(pine_docs_namespace)
+    return uploaded_files
+
 
 @app.route('/initialize', methods=['POST'])
 def initialize_flask():

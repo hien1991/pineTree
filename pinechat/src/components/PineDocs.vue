@@ -5,16 +5,11 @@
       <button @click="handleNewDoc">New Doc</button>
     </div>
     <div class="file-grid">
-      <div
-        v-for="file in files"
-        :key="file.id"
-        class="file-card"
-        @click="handleSelect(file.id)"
-      >
+      <div v-for="file in files" :key="file.id" class="file-card" @click="handleSelect(file.id)">
         <div class="file-info">
           <h3>{{ file.name }}</h3>
           <p>Uploaded: {{ file.uploadedDate }}</p>
-          <p>Size: {{ file.size }} KB</p>
+          <p>Size: {{ file.size }}</p>
           <p>Chunks: {{ file.chunks }}</p>
         </div>
         <div class="file-options">
@@ -23,12 +18,7 @@
       </div>
     </div>
     <div class="chat-input">
-      <input
-        v-model="chatInput"
-        @keyup.enter="handleSend"
-        type="text"
-        placeholder="Ask about selected documents"
-      />
+      <input v-model="chatInput" @keyup.enter="handleSend" type="text" placeholder="Ask about selected documents" />
     </div>
   </div>
 </template>
@@ -44,9 +34,21 @@ export default {
     };
   },
   methods: {
-    fetchFiles() {
-      // Fetch the user's files from your database or Pinecone namespace here
-      // Update this.files with the fetched data
+    async fetchFiles() {
+      try {
+        const response = await fetch(`${this.$apiUrl}/get_all_uploads`);
+        const uploadedFiles = await response.json();
+        this.files = uploadedFiles.map((file) => ({
+          id: file.memory_id,
+          name: file.filename,
+          uploadedDate: file.timestamp,
+          size: file.file_size,
+          chunks: file.num_chunks,
+        }));
+        console.log(uploadedFiles)
+      } catch (error) {
+        console.error('Error fetching uploaded files:', error);
+      }
     },
     handleSelect(fileId) {
       const index = this.selectedFiles.indexOf(fileId);
