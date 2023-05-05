@@ -78,8 +78,10 @@ def upload_file():
 
 @app.route('/get_all_uploads', methods=['GET'])
 def get_all_uploads():
-    # hardcoded until we introduce userId + users feature
-    pine_docs_namespace = 'hien91-pineDocs'
+    if not Database.is_initialized:
+        return jsonify({"error": "Database is not initialized"})
+    
+    pine_docs_namespace = 'hien91-pineDocs' # hardcoded until userId + users feature
     uploaded_files = Database.get_all_uploaded_files(pine_docs_namespace)
     return uploaded_files
 

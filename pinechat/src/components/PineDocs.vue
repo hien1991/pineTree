@@ -21,16 +21,23 @@
       <input v-model="chatInput" @keyup.enter="handleSend" type="text" placeholder="Ask about selected documents" />
     </div>
   </div>
+  <error-modal :visible="errorModalVisible" :message="errorMessage" @dismiss="dismissError"></error-modal>
 </template>
 
 <script>
+import ErrorModal from '@/components/common/ErrorModal.vue';
 export default {
   name: 'PineDocs',
+  components: {
+    ErrorModal,
+  },
   data() {
     return {
       files: [], // Replace with actual files fetched from your database
       selectedFiles: [],
       chatInput: '',
+      errorMessage: '',
+      errorModalVisible: false,
     };
   },
   methods: {
@@ -38,6 +45,13 @@ export default {
       try {
         const response = await fetch(`${this.$apiUrl}/get_all_uploads`);
         const uploadedFiles = await response.json();
+        if (uploadedFiles.error) {
+          this.errorMessage = uploadedFiles.error;
+          this.errorModalVisible = true;
+          console.error('Error fetching uploaded files:', uploadedFiles.error);
+          return;
+        }
+
         this.files = uploadedFiles.map((file) => ({
           id: file.memory_id,
           name: file.filename,
@@ -45,8 +59,9 @@ export default {
           size: file.file_size,
           chunks: file.num_chunks,
         }));
-        console.log(uploadedFiles)
       } catch (error) {
+        this.errorMessage = 'Error fetching uploaded files';
+        this.errorModalVisible = true;
         console.error('Error fetching uploaded files:', error);
       }
     },
@@ -75,6 +90,10 @@ export default {
       // Perform a semantic search based on chatInput and selectedFiles
       // Reset chatInput after processing
       this.chatInput = '';
+    },
+    dismissError() {
+      this.errorMessage = '';
+      this.errorModalVisible = false;
     },
   },
   mounted() {
