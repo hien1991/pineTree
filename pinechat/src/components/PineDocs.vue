@@ -53,7 +53,7 @@ export default {
         }
 
         this.files = uploadedFiles.map((file) => ({
-          id: file.memory_id,
+          id: file.id,
           name: file.filename,
           uploadedDate: file.timestamp,
           size: file.file_size,
@@ -66,6 +66,7 @@ export default {
       }
     },
     handleSelect(fileId) {
+      console.log("You clicked fileId: ", fileId)
       const index = this.selectedFiles.indexOf(fileId);
       if (index === -1) {
         this.selectedFiles.push(fileId);
@@ -73,9 +74,33 @@ export default {
         this.selectedFiles.splice(index, 1);
       }
     },
-    handleOptions(/*fileId*/) {
-      // Handle options like renaming and deleting the file
-      // You can open a modal with the options or use any other preferred method
+    async handleOptions(fileId) {
+      const confirmed = confirm("Are you sure you want to delete this file?");
+      if (confirmed) {
+        try {
+          const file = this.files.find((file) => file.id === fileId);
+          const response = await fetch(`${this.$apiUrl}/delete_file`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              filename: file.name,
+            }),
+          });
+          const result = await response.json();
+          if (result.status === "success") {
+            this.fetchFiles();
+          } else {
+            this.errorMessage = result.message;
+            this.errorModalVisible = true;
+          }
+        } catch (error) {
+          this.errorMessage = "Error deleting file";
+          this.errorModalVisible = true;
+          console.error("Error deleting file:", error);
+        }
+      }
     },
     openUploadModal() {
       // Open a modal for file upload with progress indicator

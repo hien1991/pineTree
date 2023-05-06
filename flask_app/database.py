@@ -56,16 +56,42 @@ class Database:
 
 
     @staticmethod
-    def get_all_uploaded_files(pine_docs_namespace=""):
+    def get_all_uploaded_files(pine_docs_namespace):
         query_vector = [0] * 1536
         results = Database.index.query(query_vector, top_k=100, namespace=pine_docs_namespace, include_metadata=True)
 
         uploaded_files = []
         for item in results['matches']:
+            file_metadata = item['metadata']
+            file_metadata['id'] = item['id'] # Add the memory_id to the metadata
             uploaded_files.append(item['metadata'])
         
+        print("uploaded_file: ", uploaded_files)
         return uploaded_files
+    
+    @staticmethod
+    def delete_file_by_filename(filename, pine_docs_namespace, user_namespace=""):
+        print("filename to delete: ", filename, ", namespaces: ", pine_docs_namespace, ", ", user_namespace)
+        try:
+            Database.index.delete(
+                namespace=pine_docs_namespace,
+                filter={
+                    "filename": {"$eq": filename},
+                }
+            )
+            # TODO replace default namespace with userId one
+            Database.index.delete(
+                namespace=user_namespace,
+                filter={
+                    "filename": {"$eq": filename},
+                    "source": "uploaded",
+                }
+            )
 
+            return {"status": "success"}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
+        
 
     @staticmethod
     def update_db(data, namespace=None):

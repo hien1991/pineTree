@@ -86,6 +86,21 @@ def get_all_uploads():
     return uploaded_files
 
 
+@app.route("/delete_file", methods=["POST"])
+def delete_file():
+    filename = request.json.get("filename")
+    if not filename:
+        return jsonify({"status": "error", "message": "Missing filename"}), 400
+
+    database = Database()
+    result = database.delete_file_by_filename(filename, pine_docs_namespace="hien91-pineDocs")
+
+    if result["status"] == "success":
+        return jsonify({"status": "success", "message": "File deleted successfully"})
+    else:
+        return jsonify({"status": "error", "message": result["message"]})
+
+
 @app.route('/initialize', methods=['POST'])
 def initialize_flask():
     global openai_api_key_global, pinecone_api_key_global, pinecone_environment_global, useGpt4_global
