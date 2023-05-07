@@ -71,7 +71,6 @@ class Database:
     
     @staticmethod
     def delete_file_by_filename(filename, pine_docs_namespace, user_namespace=""):
-        print("filename to delete: ", filename, ", namespaces: ", pine_docs_namespace, ", ", user_namespace)
         try:
             Database.index.delete(
                 namespace=pine_docs_namespace,

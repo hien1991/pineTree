@@ -1,7 +1,7 @@
 <template>
   <div class="pinedocs">
     <div class="header">
-      <button @click="openUploadModal">Upload</button>
+      <upload-button @upload-success="fetchFiles"></upload-button>
       <button @click="handleNewDoc">New Doc</button>
     </div>
     <div class="file-grid">
@@ -13,7 +13,7 @@
           <p>Chunks: {{ file.chunks }}</p>
         </div>
         <div class="file-options">
-          <button @click.stop="handleOptions(file.id)">Options</button>
+          <button @click.stop="handleDelete(file.id)">Delete</button>
         </div>
       </div>
     </div>
@@ -26,10 +26,12 @@
 
 <script>
 import ErrorModal from '@/components/common/ErrorModal.vue';
+import UploadButton from '@/components/UploadButton.vue';
 export default {
   name: 'PineDocs',
   components: {
     ErrorModal,
+    UploadButton,
   },
   data() {
     return {
@@ -74,7 +76,7 @@ export default {
         this.selectedFiles.splice(index, 1);
       }
     },
-    async handleOptions(fileId) {
+    async handleDelete(fileId) {
       const confirmed = confirm("Are you sure you want to delete this file?");
       if (confirmed) {
         try {
