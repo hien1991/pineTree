@@ -5,7 +5,8 @@
       <button @click="handleNewDoc">New Doc</button>
     </div>
     <div class="file-grid">
-      <div v-for="file in files" :key="file.id" class="file-card" @click="handleSelect(file.id)">
+      <div v-for="file in files" :key="file.id" @click="handleSelect(file.id)"
+        :class="{ 'selected': selectedFiles.includes(file.id) }" class="file-card">
         <div class="file-info">
           <h3>{{ file.name }}</h3>
           <p>Uploaded: {{ file.uploadedDate }}</p>
@@ -14,31 +15,32 @@
         </div>
         <div class="file-options">
           <button @click.stop="handleDelete(file.id)">Delete</button>
+          <div class="checkmark" v-if="selectedFiles.includes(file.id)">✓</div>
         </div>
       </div>
     </div>
-    <div class="chat-input">
-      <input v-model="chatInput" @keyup.enter="handleSend" type="text" placeholder="Ask about selected documents" />
-    </div>
+    <ChatInput @send="handleSend" />
   </div>
   <error-modal :visible="errorModalVisible" :message="errorMessage" @dismiss="dismissError"></error-modal>
 </template>
 
 <script>
-import ErrorModal from '@/components/common/ErrorModal.vue';
-import UploadButton from '@/components/UploadButton.vue';
+import ErrorModal from "@/components/common/ErrorModal.vue";
+import UploadButton from "@/components/UploadButton.vue";
+import ChatInput from './common/ChatInput.vue';
 export default {
-  name: 'PineDocs',
+  name: "PineDocs",
   components: {
     ErrorModal,
     UploadButton,
+    ChatInput,
   },
   data() {
     return {
       files: [], // Replace with actual files fetched from your database
       selectedFiles: [],
-      chatInput: '',
-      errorMessage: '',
+      chatInput: "",
+      errorMessage: "",
       errorModalVisible: false,
     };
   },
@@ -53,7 +55,6 @@ export default {
           console.error('Error fetching uploaded files:', uploadedFiles.error);
           return;
         }
-
         this.files = uploadedFiles.map((file) => ({
           id: file.id,
           name: file.filename,
@@ -68,13 +69,14 @@ export default {
       }
     },
     handleSelect(fileId) {
-      console.log("You clicked fileId: ", fileId)
+      console.log("You clicked fileId: ", fileId);
       const index = this.selectedFiles.indexOf(fileId);
       if (index === -1) {
         this.selectedFiles.push(fileId);
       } else {
         this.selectedFiles.splice(index, 1);
       }
+      console.log("Selected files:", this.selectedFiles);
     },
     async handleDelete(fileId) {
       const confirmed = confirm("Are you sure you want to delete this file?");
@@ -113,10 +115,15 @@ export default {
     handleNewDoc() {
       // Transition to a separate empty view for creating a new document
     },
-    handleSend() {
-      // Perform a semantic search based on chatInput and selectedFiles
-      // Reset chatInput after processing
-      this.chatInput = '';
+    handleSend(message, event) {
+      if (event.shiftKey) {
+        event.stopPropagation();
+      } else {
+        console.log("Message: ", message);
+        //Call API here, example: this.fetchFiles();
+
+        event.preventDefault();
+      }
     },
     dismissError() {
       this.errorMessage = '';
@@ -157,6 +164,10 @@ export default {
   cursor: pointer;
 }
 
+.selected {
+  background-color: #f0f0f0;
+}
+
 .file-info {
   flex-grow: 1;
 }
@@ -166,7 +177,9 @@ export default {
   justify-content: flex-end;
 }
 
-.chat-input {
-  padding: 1rem;
+.checkmark {
+  font-size: 18px;
+  color: #3cba54;
+  margin-left: 5px;
 }
 </style>
