@@ -14,12 +14,13 @@
       <button class="scroll-down" @click="scrollToBottom">↓</button>
     </div>
     <div class="chat-input">
-      <textarea v-model="inputText" @keydown.enter.exact.prevent="submitMessage"
+      <!-- <textarea v-model="inputText" @keydown.enter.exact.prevent="submitMessage"
         @keydown.shift.enter.exact="handleKeyDown" @input="resizeInput" :style="{ resize: 'none', overflow: 'hidden' }"
         class="chat-input-field" placeholder="Send a message."></textarea>
-      <button @click="submitMessage">Send</button>
+      <button @click="submitMessage">Send</button> -->
       <UploadButton />
     </div>
+    <ChatInput @send="submitMessageWithInput"/>
     <div class="db-results-wrapper" :style="{ display: dbResultsVisible ? 'block' : 'none' }">
       <DbResults v-if="dbResultsVisible" :results="searchResults" :searchQueryDisplay="searchQueryDisplay" />
     </div>
@@ -30,6 +31,7 @@
 import axios from 'axios';
 import DbResults from './DbResults.vue';
 import UploadButton from './UploadButton.vue';
+import ChatInput from './common/ChatInput.vue';
 import TypingLoader from './common/TypingLoader.vue';
 import { mapActions, mapGetters } from 'vuex';
 
@@ -39,6 +41,7 @@ export default {
     DbResults,
     UploadButton,
     TypingLoader,
+    ChatInput,
   },
   data() {
     return {
@@ -90,6 +93,33 @@ export default {
         this.isTyping = false;
       }
       this.inputText = '';
+    },
+    //TODO remove above if this works along with old text-area
+    async submitMessageWithInput(message, event) {
+      if (!message.trim()) return;
+      this.addChatMessage({ type: 'user', text: message });
+      this.isTyping = true;
+
+      try {
+        const response = await axios.post(`${this.$apiUrl}/chat`, { input_text: message });
+
+        if (response.data.status === 'error') {
+          this.addChatMessage({ type: 'error', text: response.data.message });
+        } else {
+          const aiResponse = response.data.response;
+          this.searchResults = response.data.search_results; //Received by DatabaseResults.vue
+          this.searchQueryDisplay = response.data.db_query;
+
+          const chatResponse = aiResponse;
+          this.addChatMessage({ type: 'bot', text: chatResponse });
+        }
+        this.isTyping = false;
+      } catch (error) {
+        console.error('Error while communicating with chatbot:', error);
+        this.addChatMessage({ type: 'error', text: 'Error while communicating with chatbot' });
+        this.isTyping = false;
+      }
+      event.preventDefault();
     },
     //Below methods are for auto-sizing the input text field
     handleKeyDown(event) {
