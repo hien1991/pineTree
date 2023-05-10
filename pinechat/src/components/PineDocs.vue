@@ -116,13 +116,12 @@ export default {
       // Transition to a separate empty view for creating a new document
     },
     handleSend(message, event) {
-      if (event.shiftKey) {
+      if (event && event.shiftKey) {
+        // If shift + enter is pressed, stop the event but don't send the message
         event.stopPropagation();
       } else {
         console.log("Message: ", message);
-        //Call API here, example: this.fetchFiles();
-
-        event.preventDefault();
+        // Call your API or other functions here, for example: this.fetchFiles();
       }
     },
     dismissError() {
