@@ -1,8 +1,8 @@
 <template>
     <div class="chat-input">
         <div class="input-container">
-            <textarea v-model="message" @keydown.enter="sendMessage($event)" placeholder="Type your message"
-                class="chat-textarea"></textarea>
+            <textarea ref="textarea" v-model="message" @keydown.enter="handleKeyDown($event)" @input="resizeTextArea"
+                placeholder="Type your message" class="chat-textarea"></textarea>
             <button class="submit-button" @click="sendMessage($event)">
                 <img src="../../assets/send-icon.png" alt="Submit" />
             </button>
@@ -15,18 +15,41 @@ export default {
     data() {
         return {
             message: '',
+            MIN_HEIGHT: 36, //height in pixels
+            MAX_HEIGHT: 100,
         };
     },
     methods: {
         sendMessage(event) {
             if (event && event.shiftKey) {
-                //Allows shift+enter to line-break w/o submitting
                 event.stopPropagation();
             } else {
                 this.$emit('send', this.message, event);
                 this.message = '';
                 event.preventDefault();
             }
+        },
+        handleKeyDown(event) {
+            if (event.key === 'Enter') {
+                if (event.shiftKey) {
+                    event.stopPropagation();
+                } else {
+                    this.sendMessage(event);
+                }
+            }
+        },
+        resizeTextArea() {
+            this.$nextTick(() => {
+                let textarea = this.$refs.textarea;
+                textarea.style.height = 'auto';
+                const maxHeight = this.MAX_HEIGHT;
+                const minHeight = this.MIN_HEIGHT;
+                console.log("scrollHeight: " + textarea.scrollHeight);
+
+                let newHeight = (textarea.scrollHeight <= 60) ? minHeight : Math.min(textarea.scrollHeight*0.8, maxHeight);
+                textarea.style.height = `${newHeight}px`;
+                textarea.style.overflowY = newHeight === maxHeight ? 'scroll' : 'hidden';
+            });
         },
     },
 };
@@ -57,7 +80,7 @@ export default {
     border: 1px solid #ccc;
     border-radius: 4px;
     outline: none;
-    resize: vertical;
+    resize: none;
 }
 
 .chat-textarea:focus {

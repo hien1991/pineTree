@@ -6,21 +6,18 @@
     <div class="chat-window">
       <div class="chat-messages" ref="chatMessages">
         <div class="spacer"></div>
-        <div v-for="(message, index) in getChatMessages.slice().reverse()" :key="index" class="message" :class="message.type">
+        <div v-for="(message, index) in getChatMessages.slice().reverse()" :key="index" class="message"
+          :class="message.type">
           <div class="message-bubble">{{ message.text }}</div>
           <TypingLoader v-if="isTyping && index === 0" />
         </div>
       </div>
       <button class="scroll-down" @click="scrollToBottom">↓</button>
     </div>
-    <div class="chat-input">
-      <!-- <textarea v-model="inputText" @keydown.enter.exact.prevent="submitMessage"
-        @keydown.shift.enter.exact="handleKeyDown" @input="resizeInput" :style="{ resize: 'none', overflow: 'hidden' }"
-        class="chat-input-field" placeholder="Send a message."></textarea>
-      <button @click="submitMessage">Send</button> -->
+    <div class="input-area">
+      <ChatInput class="chat-input-component" @send="submitMessageWithInput" />
       <UploadButton />
     </div>
-    <ChatInput @send="submitMessageWithInput"/>
     <div class="db-results-wrapper" :style="{ display: dbResultsVisible ? 'block' : 'none' }">
       <DbResults v-if="dbResultsVisible" :results="searchResults" :searchQueryDisplay="searchQueryDisplay" />
     </div>
@@ -149,6 +146,39 @@ export default {
 </script>
 
 <style scoped>
+
+.input-area {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: fixed;
+  bottom: 1%;
+  padding-right: 1rem;
+  box-sizing: border-box;
+  width: 800px;
+  border-top: 2px solid #70877F;
+  background-color: #3c6e71;
+  border-top-left-radius: 15px;
+  border-top-right-radius: 15px;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
+}
+
+@media screen and (max-width: 800px) {
+  .input-area {
+    width: 85vw;
+  }
+}
+
+.chat-input-component {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 90%;
+  max-width: 800px;
+}
+
 .chat-container {
   position: relative;
   max-width: 800px;
@@ -228,55 +258,6 @@ export default {
   background-color: #f9d9d7;
   color: #d9534f;
   border: 1px solid #d8a6a4;
-}
-
-.chat-input {
-  position: fixed;
-  bottom: 0.5%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100%;
-  max-width: 800px;
-  display: flex;
-  padding: 1rem;
-  background-color: #3c6e71;
-  border-top-left-radius: 15px;
-  border-top-right-radius: 15px;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
-  box-shadow: 0 -4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.chat-input .chat-input-field {
-  flex-grow: 1;
-  margin-right: 0.5rem;
-  padding: 5px;
-  border: 1px solid #dcd9d5;
-  border-radius: 4px;
-  resize: none;
-  overflow: hidden;
-  height: 35px;
-  font-size: larger;
-}
-
-.chat-input .chat-input-field:focus {
-  outline: none;
-  border: 1px solid #8e9775;
-  box-shadow: 0 0 5px rgba(142, 151, 117, 0.5);
-}
-
-.chat-input button {
-  background-color: #8e9775;
-  color: #ffffff;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.chat-input button:hover {
-  background-color: #7d8563;
 }
 
 .scroll-down {
