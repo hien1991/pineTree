@@ -2,8 +2,9 @@
     <div class="chat-input">
         <div class="input-container">
             <textarea ref="textarea" v-model="message" @keydown.enter="handleKeyDown($event)" @input="resizeTextArea"
-                placeholder="Type your message" class="chat-textarea"></textarea>
-            <button class="submit-button" @click="sendMessage($event)">
+                placeholder="Type your message" class="chat-textarea" :disabled="isSubmitting"
+                @reset="isSubmitting = false"></textarea>
+            <button class="submit-button" @click="sendMessage($event)" :disabled="isSubmitting">
                 <img src="../../assets/send-icon.png" alt="Submit" />
             </button>
         </div>
@@ -15,6 +16,7 @@ export default {
     data() {
         return {
             message: '',
+            isSubmitting: false,
             MIN_HEIGHT: 36, //height in pixels
             MAX_HEIGHT: 100,
         };
@@ -24,8 +26,10 @@ export default {
             if (event && event.shiftKey) {
                 event.stopPropagation();
             } else {
+                this.isSubmitting = true;
                 this.$emit('send', this.message, event);
                 this.message = '';
+                this.resetTextAreaSize();
                 event.preventDefault();
             }
         },
@@ -38,18 +42,24 @@ export default {
                 }
             }
         },
+        resetTextAreaSize() {
+            let textarea = this.$refs.textarea;
+            textarea.style.height = `${this.MIN_HEIGHT}px`;
+        },
         resizeTextArea() {
             this.$nextTick(() => {
                 let textarea = this.$refs.textarea;
                 textarea.style.height = 'auto';
                 const maxHeight = this.MAX_HEIGHT;
                 const minHeight = this.MIN_HEIGHT;
-                console.log("scrollHeight: " + textarea.scrollHeight);
 
-                let newHeight = (textarea.scrollHeight <= 60) ? minHeight : Math.min(textarea.scrollHeight*0.8, maxHeight);
+                let newHeight = (textarea.scrollHeight <= 60) ? minHeight : Math.min(textarea.scrollHeight * 0.8, maxHeight);
                 textarea.style.height = `${newHeight}px`;
                 textarea.style.overflowY = newHeight === maxHeight ? 'scroll' : 'hidden';
             });
+        },
+        reset() {
+            this.isSubmitting = false;
         },
     },
 };

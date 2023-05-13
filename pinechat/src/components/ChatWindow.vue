@@ -15,7 +15,7 @@
       <button class="scroll-down" @click="scrollToBottom">↓</button>
     </div>
     <div class="input-area">
-      <ChatInput class="chat-input-component" @send="submitMessageWithInput" />
+      <ChatInput ref="chatInputComponent" class="chat-input-component" @send="submitMessage" :is-submitting="isTyping" />
       <UploadButton />
     </div>
     <div class="db-results-wrapper" :style="{ display: dbResultsVisible ? 'block' : 'none' }">
@@ -42,7 +42,6 @@ export default {
   },
   data() {
     return {
-      inputText: "",
       isTyping: false,
       searchResults: [],
       searchQueryDisplay: ''
@@ -65,34 +64,7 @@ export default {
         window.scrollTo(0, scrollHeight)
       })
     },
-    async submitMessage() {
-      if (!this.inputText.trim()) return;
-      this.addChatMessage({ type: 'user', text: this.inputText });
-      this.isTyping = true;
-
-      try {
-        const response = await axios.post(`${this.$apiUrl}/chat`, { input_text: this.inputText });
-
-        if (response.data.status === 'error') {
-          this.addChatMessage({ type: 'error', text: response.data.message });
-        } else {
-          const aiResponse = response.data.response;
-          this.searchResults = response.data.search_results; //Received by DatabaseResults.vue
-          this.searchQueryDisplay = response.data.db_query;
-
-          const chatResponse = aiResponse;
-          this.addChatMessage({ type: 'bot', text: chatResponse });
-        }
-        this.isTyping = false;
-      } catch (error) {
-        console.error('Error while communicating with chatbot:', error);
-        this.addChatMessage({ type: 'error', text: 'Error while communicating with chatbot' });
-        this.isTyping = false;
-      }
-      this.inputText = '';
-    },
-    //TODO remove above if this works along with old text-area
-    async submitMessageWithInput(message, event) {
+    async submitMessage(message) {
       if (!message.trim()) return;
       this.addChatMessage({ type: 'user', text: message });
       this.isTyping = true;
@@ -110,43 +82,21 @@ export default {
           const chatResponse = aiResponse;
           this.addChatMessage({ type: 'bot', text: chatResponse });
         }
-        this.isTyping = false;
       } catch (error) {
-        console.error('Error while communicating with chatbot:', error);
-        this.addChatMessage({ type: 'error', text: 'Error while communicating with chatbot' });
+        console.error(error);
+        this.addChatMessage({ type: 'error', text: 'An error occurred while sending your message.' });
+      } finally {
         this.isTyping = false;
-      }
-      event.preventDefault();
-    },
-    //Below methods are for auto-sizing the input text field
-    handleKeyDown(event) {
-      //Allows shift+enter newlines and keeps cursor in focus
-      if (event.key === "Enter" && event.shiftKey) {
-        event.preventDefault();
-        const textarea = event.target;
-        const cursorPosition = textarea.selectionStart;
-        textarea.setRangeText("\n", cursorPosition, cursorPosition, "end");
-        textarea.setSelectionRange(cursorPosition + 1, cursorPosition + 1);
-        this.inputText = textarea.value;
-        this.resizeInput(event);
+        this.$nextTick(() => {
+          this.$refs.chatInputComponent.reset();
+        });
       }
     },
-    resizeInput(event) {
-      const target = event.target;
-      target.style.height = "auto";
-      const maxHeight = 100;
-      const minHeight = 35;
-
-      let newHeight = (target.scrollHeight <= 51) ? minHeight : Math.min(target.scrollHeight, maxHeight);
-      target.style.height = `${newHeight}px`;
-      target.style.overflowY = newHeight === maxHeight ? "scroll" : "hidden";
-    }
   }
 };
 </script>
 
 <style scoped>
-
 .input-area {
   display: flex;
   align-items: center;
