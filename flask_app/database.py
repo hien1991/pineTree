@@ -111,8 +111,7 @@ class Database:
     @staticmethod
     def semantic_search(query, filter=None, top_k=5):
         xq = openai.Embedding.create(input=query, engine=MODEL)['data'][0]['embedding']
-        meta_filter = None if filter is None else {"source": {"$eq": filter}}
-        res = Database.index.query(xq, top_k=top_k, filter=meta_filter, include_metadata=True)
+        res = Database.index.query(xq, top_k=top_k, filter=filter, include_metadata=True)
         results = []
 
         for item in res['matches']:
@@ -125,9 +124,15 @@ class Database:
 
         return results
 
+
+    @staticmethod
+    def search_selected_files(filenames, query, top_k=5):
+        meta_filter = {"filename": {"$in": filenames}}
+        return Database.semantic_search(query, filter=meta_filter, top_k=top_k)
+
     @staticmethod
     def get_relevant_memories(search_query):
-        user_input_memories = Database.semantic_search(search_query, filter="user input", top_k=5)
-        uploaded_memories = Database.semantic_search(search_query, filter="uploaded", top_k=5)
+        user_input_memories = Database.semantic_search(search_query, filter={"source": {"$eq": "user input"}}, top_k=5)
+        uploaded_memories = Database.semantic_search(search_query, filter={"source": {"$eq": "uploaded"}}, top_k=5)
         longterm_memories = user_input_memories + uploaded_memories
         return longterm_memories

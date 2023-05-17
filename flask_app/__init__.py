@@ -57,6 +57,18 @@ def chat_route():
         return jsonify({"response": response, "search_results": formatted_search_results, "db_query": search_query})
     except Exception as e:
         return jsonify({"status": "error", "message": "Error: " + str(e)})
+    
+
+#TODO: Call AI to use returned db response to give answer to user 
+@app.route('/search_selected_files', methods=['POST'])
+def search_selected_files():
+    filenames = request.json.get('filenames', [])
+    query = request.json.get('query', '')
+    try:
+        results = Database.search_selected_files(filenames, query)
+        return jsonify({"results": results})
+    except Exception as e:
+        return jsonify({"status": "error", "message": "Error: " + str(e)})
 
 
 @app.route('/upload', methods=['POST'])

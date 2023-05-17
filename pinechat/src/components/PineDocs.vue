@@ -5,8 +5,8 @@
       <button @click="handleNewDoc">New Doc</button>
     </div>
     <div class="file-grid">
-      <div v-for="file in files" :key="file.id" @click="handleSelect(file.id)"
-        :class="{ 'selected': selectedFiles.includes(file.id) }" class="file-card">
+      <div v-for="file in files" :key="file.id" @click="handleSelect(file.name)"
+        :class="{ 'selected': selectedFiles.includes(file.name) }" class="file-card">
         <div class="file-info">
           <h3>{{ file.name }}</h3>
           <p>Uploaded: {{ file.uploadedDate }}</p>
@@ -19,12 +19,13 @@
         </div>
       </div>
     </div>
-    <ChatInput @send="handleSend" />
+    <ChatInput ref="chatInputComponent" @send="handleSend" />
   </div>
   <error-modal :visible="errorModalVisible" :message="errorMessage" @dismiss="dismissError"></error-modal>
 </template>
 
 <script>
+import axios from 'axios';
 import ErrorModal from "@/components/common/ErrorModal.vue";
 import UploadButton from "@/components/UploadButton.vue";
 import ChatInput from './common/ChatInput.vue';
@@ -37,9 +38,8 @@ export default {
   },
   data() {
     return {
-      files: [], // Replace with actual files fetched from your database
+      files: [],
       selectedFiles: [],
-      chatInput: "",
       errorMessage: "",
       errorModalVisible: false,
     };
@@ -68,11 +68,10 @@ export default {
         console.error('Error fetching uploaded files:', error);
       }
     },
-    handleSelect(fileId) {
-      console.log("You clicked fileId: ", fileId);
-      const index = this.selectedFiles.indexOf(fileId);
+    handleSelect(filename) {
+      const index = this.selectedFiles.indexOf(filename);
       if (index === -1) {
-        this.selectedFiles.push(fileId);
+        this.selectedFiles.push(filename);
       } else {
         this.selectedFiles.splice(index, 1);
       }
@@ -106,22 +105,26 @@ export default {
         }
       }
     },
-    openUploadModal() {
-      // Open a modal for file upload with progress indicator
-    },
-    handleUpload() {
-      // Handle file upload and update this.files with the new file
-    },
     handleNewDoc() {
       // Transition to a separate empty view for creating a new document
     },
-    handleSend(message, event) {
+    async handleSend(message, event) {
       if (event && event.shiftKey) {
-        // If shift + enter is pressed, stop the event but don't send the message
+        // If shift + enter, stop event but don't send message
         event.stopPropagation();
       } else {
-        console.log("Message: ", message);
-        // Call your API or other functions here, for example: this.fetchFiles();
+        this.$refs.chatInputComponent.isSubmitting = true;
+        try {
+          const response = await axios.post(`${this.$apiUrl}/search_selected_files`, {
+            filenames: this.selectedFiles,
+            query: message
+          });
+          console.log(response.data);
+        } catch (error) {
+          console.error(error);
+        } finally {
+          this.$refs.chatInputComponent.isSubmitting = false;
+        }
       }
     },
     dismissError() {
