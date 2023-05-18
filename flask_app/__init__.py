@@ -52,21 +52,24 @@ def chat_route():
         saveUserInput(input_text)  # Save relevant info from user into db
         response, short_term_memories_global = chat(input_text, short_term_memories_global, longterm_memories)
 
-        formatted_search_results = [format_search_result(item, index) for index, item in enumerate(longterm_memories)]
-        #print("search results: ", formatted_search_results)
-        return jsonify({"response": response, "search_results": formatted_search_results, "db_query": search_query})
+        formatted_db_results = [format_search_result(item, index) for index, item in enumerate(longterm_memories)]
+        #print("search results: ", formatted_db_results)
+        return jsonify({"response": response, "search_results": formatted_db_results, "db_query": search_query})
     except Exception as e:
         return jsonify({"status": "error", "message": "Error: " + str(e)})
     
 
-#TODO: Call AI to use returned db response to give answer to user 
-@app.route('/search_selected_files', methods=['POST'])
-def search_selected_files():
+@app.route('/chat_with_files', methods=['POST'])
+def chat_with_files():
+    global openai_api_key_global, short_term_memories_global, pinecone_api_key_global
     filenames = request.json.get('filenames', [])
-    query = request.json.get('query', '')
+    input_text = request.json.get('input_text', '')
     try:
-        results = Database.search_selected_files(filenames, query)
-        return jsonify({"results": results})
+        search_query = get_search_query(input_text, short_term_memories_global, openai_api_key_global)
+        db_results = Database.search_selected_files(filenames, search_query)
+        formatted_db_results = [format_search_result(item, index) for index, item in enumerate(db_results)]
+        response, short_term_memories_global = chat(input_text, short_term_memories_global, formatted_db_results)
+        return jsonify({"response": response, "search_results": formatted_db_results, "db_query": search_query})
     except Exception as e:
         return jsonify({"status": "error", "message": "Error: " + str(e)})
 

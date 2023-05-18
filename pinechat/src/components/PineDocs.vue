@@ -115,9 +115,9 @@ export default {
       } else {
         this.$refs.chatInputComponent.isSubmitting = true;
         try {
-          const response = await axios.post(`${this.$apiUrl}/search_selected_files`, {
+          const response = await axios.post(`${this.$apiUrl}/chat_with_files`, {
             filenames: this.selectedFiles,
-            query: message
+            input_text: message
           });
           console.log(response.data);
         } catch (error) {
