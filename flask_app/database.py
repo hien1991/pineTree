@@ -126,7 +126,7 @@ class Database:
 
 
     @staticmethod
-    def search_selected_files(filenames, query, top_k=10):
+    def search_selected_files(filenames, query, top_k=6):
         meta_filter = {"filename": {"$in": filenames}}
         return Database.semantic_search(query, filter=meta_filter, top_k=top_k)
 

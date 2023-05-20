@@ -19,6 +19,11 @@
         </div>
       </div>
     </div>
+    <div class="ai-response">
+      <h2>AI Response:</h2>
+      <p v-if="!isProcessing">{{ aiResponse }}</p>
+      <TypingLoader v-if="isProcessing" />
+    </div>
     <ChatInput ref="chatInputComponent" @send="handleSend" />
   </div>
   <error-modal :visible="errorModalVisible" :message="errorMessage" @dismiss="dismissError"></error-modal>
@@ -29,12 +34,14 @@ import axios from 'axios';
 import ErrorModal from "@/components/common/ErrorModal.vue";
 import UploadButton from "@/components/UploadButton.vue";
 import ChatInput from './common/ChatInput.vue';
+import TypingLoader from './common/TypingLoader.vue';
 export default {
   name: "PineDocs",
   components: {
     ErrorModal,
     UploadButton,
     ChatInput,
+    TypingLoader,
   },
   data() {
     return {
@@ -42,6 +49,8 @@ export default {
       selectedFiles: [],
       errorMessage: "",
       errorModalVisible: false,
+      aiResponse: "",
+      isProcessing: false,
     };
   },
   methods: {
@@ -114,16 +123,19 @@ export default {
         event.stopPropagation();
       } else {
         this.$refs.chatInputComponent.isSubmitting = true;
+        this.isProcessing = true;
         try {
           const response = await axios.post(`${this.$apiUrl}/chat_with_files`, {
             filenames: this.selectedFiles,
             input_text: message
           });
+          this.aiResponse = response.data.response;
           console.log(response.data);
         } catch (error) {
           console.error(error);
         } finally {
           this.$refs.chatInputComponent.isSubmitting = false;
+          this.isProcessing = false;
         }
       }
     },
@@ -155,6 +167,13 @@ export default {
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   grid-gap: 1rem;
   padding: 1rem;
+}
+
+.ai-response {
+  margin-top: 2rem;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .file-card {
