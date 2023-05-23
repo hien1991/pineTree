@@ -26,7 +26,7 @@
 
 <script>
 import axios from 'axios';
-import DbResults from './DbResults.vue';
+import DbResults from './common/DbResults.vue';
 import UploadButton from './UploadButton.vue';
 import ChatInput from './common/ChatInput.vue';
 import TypingLoader from './common/TypingLoader.vue';
@@ -76,7 +76,7 @@ export default {
           this.addChatMessage({ type: 'error', text: response.data.message });
         } else {
           const aiResponse = response.data.response;
-          this.searchResults = response.data.search_results; //Received by DatabaseResults.vue
+          this.searchResults = response.data.search_results; //Sent to DbResults.vue
           this.searchQueryDisplay = response.data.db_query;
 
           const chatResponse = aiResponse;

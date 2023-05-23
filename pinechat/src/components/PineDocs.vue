@@ -25,6 +25,9 @@
       <TypingLoader v-if="isProcessing" />
     </div>
     <ChatInput ref="chatInputComponent" @send="handleSend" />
+    <div class="db-results-wrapper" :style="{ display: dbResultsVisible ? 'block' : 'none' }">
+      <DbResults v-if="dbResultsVisible" :results="searchResults" :searchQueryDisplay="searchQueryDisplay" />
+    </div>
   </div>
   <error-modal :visible="errorModalVisible" :message="errorMessage" @dismiss="dismissError"></error-modal>
 </template>
@@ -35,6 +38,7 @@ import ErrorModal from "@/components/common/ErrorModal.vue";
 import UploadButton from "@/components/UploadButton.vue";
 import ChatInput from './common/ChatInput.vue';
 import TypingLoader from './common/TypingLoader.vue';
+import DbResults from './common/DbResults.vue';
 export default {
   name: "PineDocs",
   components: {
@@ -42,6 +46,7 @@ export default {
     UploadButton,
     ChatInput,
     TypingLoader,
+    DbResults,
   },
   data() {
     return {
@@ -51,7 +56,15 @@ export default {
       errorModalVisible: false,
       aiResponse: "",
       isProcessing: false,
+      searchResults: [],
+      searchQueryDisplay: '',
     };
+  },
+  props: {
+    dbResultsVisible: {
+      type: Boolean,
+      default: false,
+    },
   },
   methods: {
     async fetchFiles() {
@@ -130,6 +143,8 @@ export default {
             input_text: message
           });
           this.aiResponse = response.data.response;
+          this.searchResults = response.data.search_results; //Sent to DbResults.vue
+          this.searchQueryDisplay = response.data.db_query;
           console.log(response.data);
         } catch (error) {
           console.error(error);

@@ -1,6 +1,6 @@
 <template>
     <div class="pine-docs-view">
-        <PineDocs />
+        <PineDocs :dbResultsVisible="dbResultsVisible" />
     </div>
 </template>
   
@@ -12,12 +12,15 @@ export default {
     components: {
         PineDocs,
     },
+    props: {
+        dbResultsVisible: {
+            type: Boolean,
+            default: false,
+        },
+    },
 };
 </script>
   
 <style scoped>
-.pine-docs-view {
-    /* Add custom styles for the PineDocsView here */
-}
 </style>
   
